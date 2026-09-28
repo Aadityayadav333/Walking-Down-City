@@ -1,0 +1,2090 @@
+/* ============================================================
+   WALKING QUEST
+   Responsive Mobile-First Game UI
+============================================================ */
+
+
+/* ============================================================
+   GLOBAL RESET
+============================================================ */
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+
+html {
+    width: 100%;
+    min-height: 100%;
+
+    font-size: 16px;
+
+    -webkit-tap-highlight-color: transparent;
+}
+
+
+body {
+    width: 100%;
+    min-height: 100vh;
+
+    font-family:
+        Inter,
+        "Segoe UI",
+        Roboto,
+        Arial,
+        sans-serif;
+
+    background:
+        linear-gradient(
+            135deg,
+            #dceeff 0%,
+            #eef7ff 45%,
+            #e8f8ee 100%
+        );
+
+    color: #172033;
+
+    overflow-x: hidden;
+}
+
+
+/* ============================================================
+   MAIN GAME CONTAINER
+============================================================ */
+
+.game-container {
+
+    width: 100%;
+
+    max-width: 900px;
+
+    margin: 0 auto;
+
+    padding:
+        18px
+        18px
+        40px;
+
+}
+
+
+/* ============================================================
+   GAME HEADER
+============================================================ */
+
+.game-header {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 15px;
+
+    margin-bottom: 14px;
+}
+
+
+.game-title {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    text-align: left;
+}
+
+
+.title-icon {
+
+    width: 48px;
+    height: 48px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    background: #ffffff;
+
+    border-radius: 15px;
+
+    font-size: 28px;
+
+    box-shadow:
+        0 5px 18px rgba(0, 0, 0, 0.08);
+}
+
+
+.game-title h1 {
+
+    font-size: 25px;
+
+    line-height: 1.1;
+
+    font-weight: 800;
+
+    letter-spacing: -0.5px;
+}
+
+
+.game-title p {
+
+    margin-top: 3px;
+
+    font-size: 12px;
+
+    color: #718096;
+}
+
+
+.score-box {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    padding:
+        8px
+        12px;
+
+    background: #ffffff;
+
+    border-radius: 14px;
+
+    box-shadow:
+        0 5px 18px rgba(0, 0, 0, 0.08);
+}
+
+
+.score-icon {
+
+    font-size: 23px;
+}
+
+
+.score-box small {
+
+    display: block;
+
+    font-size: 10px;
+
+    color: #718096;
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.5px;
+}
+
+
+.score-box strong {
+
+    display: block;
+
+    font-size: 18px;
+
+    color: #d99b00;
+}
+
+
+/* ============================================================
+   STATUS
+============================================================ */
+
+.game-status {
+
+    width: 100%;
+
+    padding:
+        10px
+        14px;
+
+    margin-bottom: 12px;
+
+    background: rgba(255, 255, 255, 0.88);
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.8);
+
+    border-radius: 12px;
+
+    color: #526174;
+
+    font-size: 13px;
+
+    text-align: center;
+
+    box-shadow:
+        0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+
+/* ============================================================
+   HUD
+============================================================ */
+
+.game-hud {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, 1fr);
+
+    gap: 8px;
+
+    margin-bottom: 12px;
+}
+
+
+.hud-item {
+
+    min-width: 0;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 7px;
+
+    padding:
+        10px
+        6px;
+
+    background: #ffffff;
+
+    border-radius: 13px;
+
+    box-shadow:
+        0 4px 14px rgba(0, 0, 0, 0.06);
+}
+
+
+.hud-icon {
+
+    font-size: 19px;
+}
+
+
+.hud-item small {
+
+    display: block;
+
+    font-size: 9px;
+
+    color: #7a8797;
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.4px;
+}
+
+
+.hud-item strong {
+
+    display: block;
+
+    margin-top: 2px;
+
+    font-size: 14px;
+
+    white-space: nowrap;
+}
+
+
+/* ============================================================
+   GAME AREA
+============================================================ */
+
+.game-area {
+
+    position: relative;
+
+    width: 100%;
+
+    /*
+        Responsive game world.
+
+        On desktop:
+        approximately 500px high.
+
+        On mobile:
+        automatically becomes shorter.
+    */
+
+    height: clamp(
+        390px,
+        62vh,
+        560px
+    );
+
+    min-height: 350px;
+
+    overflow: hidden;
+
+    border:
+        4px solid
+        #243447;
+
+    border-radius: 22px;
+
+    background: #a8d98b;
+
+    box-shadow:
+        0 15px 35px
+        rgba(30, 50, 70, 0.18);
+
+    isolation: isolate;
+}
+
+
+/* ============================================================
+   WORLD BACKGROUND
+============================================================ */
+
+.world-background {
+
+    position: absolute;
+
+    inset: 0;
+
+    overflow: hidden;
+
+    /*
+        Grass / terrain
+    */
+
+    background-color: #9fd27d;
+
+    background-image:
+
+        radial-gradient(
+            circle at 20% 30%,
+            rgba(255,255,255,0.14) 0 2px,
+            transparent 3px
+        ),
+
+        radial-gradient(
+            circle at 70% 70%,
+            rgba(70,130,65,0.12) 0 2px,
+            transparent 3px
+        );
+
+    background-size:
+        35px 35px,
+        47px 47px;
+}
+
+
+/* ============================================================
+   ROADS
+============================================================ */
+
+.road {
+
+    position: absolute;
+
+    background:
+        #626b73;
+
+    z-index: 2;
+
+    box-shadow:
+        inset 0 2px 0 rgba(255,255,255,0.12),
+        inset 0 -2px 0 rgba(0,0,0,0.12);
+}
+
+
+/* Horizontal roads */
+
+.road-horizontal {
+
+    left: -5%;
+
+    width: 110%;
+
+    height: 68px;
+}
+
+
+/* Vertical roads */
+
+.road-vertical {
+
+    top: -5%;
+
+    height: 110%;
+
+    width: 68px;
+}
+
+
+/* Road positions */
+
+.road-1 {
+
+    top: 34%;
+}
+
+
+.road-2 {
+
+    top: 68%;
+}
+
+
+.road-3 {
+
+    left: 32%;
+}
+
+
+.road-4 {
+
+    left: 70%;
+}
+
+
+/* ============================================================
+   ROAD LANE MARKINGS
+============================================================ */
+
+.road-horizontal::after {
+
+    content: "";
+
+    position: absolute;
+
+    left: 0;
+    right: 0;
+
+    top: 50%;
+
+    height: 4px;
+
+    transform:
+        translateY(-50%);
+
+    background:
+        repeating-linear-gradient(
+            to right,
+            #f5d76e 0,
+            #f5d76e 28px,
+            transparent 28px,
+            transparent 48px
+        );
+
+    opacity: 0.8;
+}
+
+
+.road-vertical::after {
+
+    content: "";
+
+    position: absolute;
+
+    top: 0;
+    bottom: 0;
+
+    left: 50%;
+
+    width: 4px;
+
+    transform:
+        translateX(-50%);
+
+    background:
+        repeating-linear-gradient(
+            to bottom,
+            #f5d76e 0,
+            #f5d76e 28px,
+            transparent 28px,
+            transparent 48px
+        );
+
+    opacity: 0.8;
+}
+
+
+/* ============================================================
+   INTERSECTIONS
+============================================================ */
+
+.intersection {
+
+    position: absolute;
+
+    width: 72px;
+    height: 72px;
+
+    background:
+        #626b73;
+
+    z-index: 3;
+}
+
+
+/*
+    Put intersections approximately
+    where roads cross.
+*/
+
+.intersection-1 {
+
+    left: calc(32% - 2px);
+
+    top: calc(34% - 2px);
+}
+
+
+.intersection-2 {
+
+    left: calc(70% - 2px);
+
+    top: calc(68% - 2px);
+}
+
+
+/* ============================================================
+   LOCATIONS / BUILDINGS
+============================================================ */
+
+.location {
+
+    position: absolute;
+
+    z-index: 5;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 2px;
+
+    user-select: none;
+
+    transition:
+        transform 0.2s ease;
+}
+
+
+.location:hover {
+
+    transform:
+        translateY(-3px);
+}
+
+
+.location-name {
+
+    padding:
+        3px
+        7px;
+
+    border-radius: 6px;
+
+    background:
+        rgba(20, 30, 40, 0.82);
+
+    color: white;
+
+    font-size: 9px;
+
+    font-weight: 700;
+
+    white-space: nowrap;
+
+    box-shadow:
+        0 2px 5px rgba(0,0,0,0.2);
+}
+
+
+.building-icon {
+
+    width: 52px;
+    height: 52px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    background:
+        #ffffff;
+
+    border:
+        3px solid
+        rgba(30,40,50,0.15);
+
+    border-radius: 13px;
+
+    font-size: 29px;
+
+    box-shadow:
+        0 5px 10px
+        rgba(0,0,0,0.18);
+}
+
+
+/* ============================================================
+   HOUSE POSITIONS
+============================================================ */
+
+.house-1 {
+
+    left: 8%;
+
+    top: 8%;
+}
+
+
+.house-2 {
+
+    left: 48%;
+
+    top: 8%;
+}
+
+
+/* ============================================================
+   SHOP
+============================================================ */
+
+.shop {
+
+    left: 7%;
+
+    top: 48%;
+}
+
+
+/* ============================================================
+   HOSPITAL
+============================================================ */
+
+.hospital {
+
+    right: 6%;
+
+    top: 49%;
+}
+
+
+/* ============================================================
+   CAFE
+============================================================ */
+
+.cafe {
+
+    left: 48%;
+
+    bottom: 7%;
+}
+
+
+/* ============================================================
+   SCHOOL
+============================================================ */
+
+.school {
+
+    right: 8%;
+
+    bottom: 7%;
+}
+
+
+/* ============================================================
+   PARK
+============================================================ */
+
+.park {
+
+    left: 39%;
+
+    top: 42%;
+
+    width: 110px;
+    height: 105px;
+
+    padding: 8px;
+
+    background:
+        #78bf72;
+
+    border:
+        3px solid
+        #579957;
+
+    border-radius: 22px;
+
+    box-shadow:
+        0 5px 12px
+        rgba(0,0,0,0.14);
+}
+
+
+.park .location-icon {
+
+    display: none;
+}
+
+
+.park .location-name {
+
+    position: absolute;
+
+    bottom: -20px;
+}
+
+
+.tree {
+
+    position: absolute;
+
+    font-size: 24px;
+}
+
+
+.tree-1 {
+
+    left: 10px;
+    top: 12px;
+}
+
+
+.tree-2 {
+
+    right: 10px;
+    top: 12px;
+}
+
+
+.tree-3 {
+
+    left: 20px;
+    bottom: 10px;
+}
+
+
+.tree-4 {
+
+    right: 20px;
+    bottom: 10px;
+}
+
+
+/* ============================================================
+   COINS
+============================================================ */
+
+.coin {
+
+    position: absolute;
+
+    z-index: 12;
+
+    width: 38px;
+    height: 38px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    border: none;
+
+    background: transparent;
+
+    font-size: 28px;
+
+    cursor: pointer;
+
+    filter:
+        drop-shadow(
+            0 3px 4px
+            rgba(0,0,0,0.25)
+        );
+
+    animation:
+        coinFloat 1.4s
+        ease-in-out
+        infinite;
+
+    transition:
+        transform 0.15s ease;
+}
+
+
+.coin:hover {
+
+    transform:
+        scale(1.25);
+}
+
+
+.coin:active {
+
+    transform:
+        scale(0.9);
+}
+
+
+.coin-1 {
+
+    left: 25%;
+
+    top: 19%;
+}
+
+
+.coin-2 {
+
+    left: 58%;
+
+    top: 26%;
+}
+
+
+.coin-3 {
+
+    left: 82%;
+
+    top: 39%;
+}
+
+
+.coin-4 {
+
+    left: 25%;
+
+    bottom: 21%;
+}
+
+
+.coin-5 {
+
+    left: 67%;
+
+    bottom: 23%;
+}
+
+
+@keyframes coinFloat {
+
+    0%,
+    100% {
+
+        transform:
+            translateY(0)
+            rotate(-5deg);
+    }
+
+    50% {
+
+        transform:
+            translateY(-7px)
+            rotate(5deg);
+    }
+}
+
+
+/* ============================================================
+   GOAL
+============================================================ */
+
+.goal {
+
+    position: absolute;
+
+    right: 7%;
+
+    top: 16%;
+
+    z-index: 10;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    gap: 2px;
+
+    animation:
+        goalPulse 1.5s
+        ease-in-out
+        infinite;
+}
+
+
+.goal-flag {
+
+    font-size: 39px;
+
+    filter:
+        drop-shadow(
+            0 3px 4px
+            rgba(0,0,0,0.25)
+        );
+}
+
+
+.goal span {
+
+    padding:
+        3px
+        7px;
+
+    border-radius: 6px;
+
+    background:
+        rgba(20,30,40,0.85);
+
+    color: white;
+
+    font-size: 9px;
+
+    font-weight: 700;
+}
+
+
+@keyframes goalPulse {
+
+    0%,
+    100% {
+
+        transform:
+            scale(1);
+    }
+
+    50% {
+
+        transform:
+            scale(1.08);
+    }
+}
+
+
+/* ============================================================
+   PLAYER
+============================================================ */
+
+#player {
+
+    position: absolute;
+
+    left: 50%;
+
+    bottom: 50%;
+
+    z-index: 30;
+
+    width: 50px;
+    height: 60px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    transform:
+        translate(-50%, 50%);
+
+    transition:
+        left 0.35s ease,
+        bottom 0.35s ease;
+
+    pointer-events: none;
+}
+
+
+.player-character {
+
+    position: relative;
+
+    z-index: 2;
+
+    font-size: 38px;
+
+    filter:
+        drop-shadow(
+            0 4px 4px
+            rgba(0,0,0,0.25)
+        );
+}
+
+
+.player-shadow {
+
+    position: absolute;
+
+    bottom: 3px;
+
+    left: 50%;
+
+    width: 32px;
+    height: 9px;
+
+    transform:
+        translateX(-50%);
+
+    background:
+        rgba(0,0,0,0.22);
+
+    border-radius: 50%;
+
+    filter:
+        blur(2px);
+}
+
+
+/* ============================================================
+   MAP OVERLAY
+============================================================ */
+
+.map-overlay {
+
+    position: absolute;
+
+    inset: 0;
+
+    z-index: 40;
+
+    pointer-events: none;
+}
+
+
+.gps-indicator {
+
+    position: absolute;
+
+    top: 12px;
+
+    left: 12px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 6px;
+
+    padding:
+        7px
+        10px;
+
+    border-radius: 10px;
+
+    background:
+        rgba(255,255,255,0.92);
+
+    box-shadow:
+        0 4px 10px
+        rgba(0,0,0,0.12);
+
+    font-size: 10px;
+
+    font-weight: 700;
+}
+
+
+.gps-dot {
+
+    width: 8px;
+    height: 8px;
+
+    border-radius: 50%;
+
+    background:
+        #22c55e;
+
+    box-shadow:
+        0 0 0 4px
+        rgba(34,197,94,0.18);
+}
+
+
+.compass {
+
+    position: absolute;
+
+    top: 12px;
+
+    right: 12px;
+
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background:
+        rgba(255,255,255,0.92);
+
+    box-shadow:
+        0 4px 10px
+        rgba(0,0,0,0.12);
+}
+
+
+.compass span {
+
+    font-size: 17px;
+
+    line-height: 13px;
+
+    font-weight: 800;
+}
+
+
+.compass small {
+
+    font-size: 8px;
+
+    color: #667085;
+}
+
+
+/* ============================================================
+   DIRECTION PANEL
+============================================================ */
+
+.direction-panel {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 8px;
+
+    margin-top: 12px;
+
+    padding: 10px;
+
+    background: white;
+
+    border-radius: 13px;
+
+    box-shadow:
+        0 4px 14px
+        rgba(0,0,0,0.06);
+
+    font-size: 12px;
+}
+
+
+.direction-panel span {
+
+    color: #7a8797;
+}
+
+
+.direction-panel strong {
+
+    color: #1769aa;
+
+    text-transform: uppercase;
+}
+
+
+/* ============================================================
+   CONTROL SECTION
+============================================================ */
+
+.controls-section {
+
+    margin-top: 14px;
+
+    text-align: center;
+}
+
+
+.controls-title {
+
+    margin-bottom: 8px;
+
+    font-size: 12px;
+
+    color: #667085;
+
+    font-weight: 600;
+}
+
+
+.direction-controls {
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    gap: 5px;
+}
+
+
+.middle-controls {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 5px;
+}
+
+
+.direction-button {
+
+    width: 58px;
+    height: 50px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+
+    border-radius: 13px;
+
+    background:
+        #25364a;
+
+    color: white;
+
+    font-size: 25px;
+
+    font-weight: 700;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 5px 0
+        #182535;
+
+    transition:
+        transform 0.1s ease,
+        box-shadow 0.1s ease;
+}
+
+
+.direction-button:hover {
+
+    background:
+        #30465d;
+}
+
+
+.direction-button:active {
+
+    transform:
+        translateY(4px);
+
+    box-shadow:
+        0 1px 0
+        #182535;
+}
+
+
+/* ============================================================
+   GAME ACTIONS
+============================================================ */
+
+.game-actions {
+
+    display: flex;
+
+    gap: 8px;
+
+    margin-top: 15px;
+}
+
+
+.game-actions button {
+
+    flex: 1;
+
+    min-height: 46px;
+
+    border: none;
+
+    border-radius: 12px;
+
+    font-family: inherit;
+
+    font-size: 13px;
+
+    font-weight: 700;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.15s ease,
+        opacity 0.15s ease;
+}
+
+
+.game-actions button:active {
+
+    transform:
+        scale(0.97);
+}
+
+
+.primary-button {
+
+    background:
+        #1769aa;
+
+    color: white;
+
+    box-shadow:
+        0 4px 12px
+        rgba(23,105,170,0.28);
+}
+
+
+.secondary-button {
+
+    background:
+        white;
+
+    color:
+        #425466;
+
+    border:
+        1px solid
+        #d9e1e8 !important;
+}
+
+
+/* ============================================================
+   EXTRA STATS
+============================================================ */
+
+.extra-stats {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 8px;
+
+    margin-top: 14px;
+}
+
+
+.extra-stat {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 7px;
+
+    padding:
+        10px 6px;
+
+    background:
+        rgba(255,255,255,0.85);
+
+    border-radius: 12px;
+
+    box-shadow:
+        0 4px 12px
+        rgba(0,0,0,0.05);
+}
+
+
+.extra-stat > span {
+
+    font-size: 19px;
+}
+
+
+.extra-stat small {
+
+    display: block;
+
+    font-size: 9px;
+
+    color: #7a8797;
+}
+
+
+.extra-stat strong {
+
+    display: block;
+
+    margin-top: 2px;
+
+    font-size: 13px;
+}
+
+
+/* ============================================================
+   MISSION PANEL
+============================================================ */
+
+.mission-panel {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    margin-top: 14px;
+
+    padding: 13px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #fffdf4,
+            #fff8d9
+        );
+
+    border:
+        1px solid
+        #f3df91;
+
+    border-radius: 14px;
+
+    text-align: left;
+
+    box-shadow:
+        0 4px 14px
+        rgba(0,0,0,0.05);
+}
+
+
+.mission-icon {
+
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    background:
+        #ffffff;
+
+    border-radius: 12px;
+
+    font-size: 22px;
+}
+
+
+.mission-content {
+
+    min-width: 0;
+}
+
+
+.mission-content small {
+
+    display: block;
+
+    color: #a07800;
+
+    font-size: 9px;
+
+    font-weight: 800;
+
+    letter-spacing: 0.8px;
+}
+
+
+.mission-content strong {
+
+    display: block;
+
+    margin-top: 2px;
+
+    font-size: 14px;
+}
+
+
+.mission-content p {
+
+    margin-top: 3px;
+
+    color: #776d48;
+
+    font-size: 11px;
+
+    line-height: 1.4;
+}
+
+
+/* ============================================================
+   FOOTER
+============================================================ */
+
+.game-footer {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    gap: 10px;
+
+    margin-top: 20px;
+
+    padding-top: 14px;
+
+    border-top:
+        1px solid
+        rgba(80,100,120,0.15);
+
+    color: #8491a1;
+
+    font-size: 10px;
+}
+
+
+/* ============================================================
+   TABLET
+============================================================ */
+
+@media (min-width: 600px) {
+
+    .game-container {
+
+        padding:
+            25px
+            25px
+            50px;
+    }
+
+
+    .game-area {
+
+        height: 520px;
+    }
+
+
+    .building-icon {
+
+        width: 60px;
+        height: 60px;
+
+        font-size: 34px;
+    }
+
+
+    .game-title h1 {
+
+        font-size: 29px;
+    }
+
+
+    .direction-button {
+
+        width: 64px;
+        height: 55px;
+    }
+
+}
+
+
+/* ============================================================
+   MOBILE
+============================================================ */
+
+@media (max-width: 500px) {
+
+    .game-container {
+
+        padding:
+            12px
+            10px
+            30px;
+    }
+
+
+    .game-header {
+
+        gap: 8px;
+    }
+
+
+    .title-icon {
+
+        width: 42px;
+        height: 42px;
+
+        font-size: 24px;
+
+        border-radius: 12px;
+    }
+
+
+    .game-title h1 {
+
+        font-size: 20px;
+    }
+
+
+    .game-title p {
+
+        font-size: 10px;
+    }
+
+
+    .score-box {
+
+        padding:
+            7px
+            9px;
+
+        border-radius: 11px;
+    }
+
+
+    .score-icon {
+
+        font-size: 19px;
+    }
+
+
+    .score-box strong {
+
+        font-size: 16px;
+    }
+
+
+    .game-status {
+
+        font-size: 11px;
+
+        padding:
+            9px
+            10px;
+    }
+
+
+    .game-hud {
+
+        gap: 5px;
+    }
+
+
+    .hud-item {
+
+        flex-direction: column;
+
+        gap: 2px;
+
+        padding:
+            7px
+            3px;
+    }
+
+
+    .hud-icon {
+
+        font-size: 17px;
+    }
+
+
+    .hud-item small {
+
+        font-size: 7px;
+    }
+
+
+    .hud-item strong {
+
+        font-size: 12px;
+    }
+
+
+    .game-area {
+
+        height:
+            min(
+                65vh,
+                500px
+            );
+
+        min-height: 360px;
+
+        border-radius: 18px;
+
+        border-width: 3px;
+    }
+
+
+    .road-horizontal {
+
+        height: 55px;
+    }
+
+
+    .road-vertical {
+
+        width: 55px;
+    }
+
+
+    .intersection {
+
+        width: 58px;
+        height: 58px;
+    }
+
+
+    .building-icon {
+
+        width: 43px;
+        height: 43px;
+
+        font-size: 24px;
+
+        border-radius: 10px;
+    }
+
+
+    .location-name {
+
+        font-size: 7px;
+
+        padding:
+            2px
+            5px;
+    }
+
+
+    .park {
+
+        width: 85px;
+        height: 82px;
+    }
+
+
+    .tree {
+
+        font-size: 19px;
+    }
+
+
+    .goal-flag {
+
+        font-size: 31px;
+    }
+
+
+    .coin {
+
+        font-size: 24px;
+    }
+
+
+    #player {
+
+        width: 42px;
+        height: 52px;
+    }
+
+
+    .player-character {
+
+        font-size: 32px;
+    }
+
+
+    .player-shadow {
+
+        width: 27px;
+    }
+
+
+    .gps-indicator {
+
+        top: 8px;
+        left: 8px;
+
+        padding:
+            5px
+            7px;
+
+        font-size: 8px;
+    }
+
+
+    .compass {
+
+        top: 8px;
+        right: 8px;
+
+        width: 34px;
+        height: 34px;
+    }
+
+
+    .compass span {
+
+        font-size: 14px;
+    }
+
+
+    .direction-button {
+
+        width: 54px;
+        height: 47px;
+
+        font-size: 22px;
+    }
+
+
+    .game-actions {
+
+        gap: 5px;
+    }
+
+
+    .game-actions button {
+
+        min-height: 43px;
+
+        font-size: 11px;
+
+        padding:
+            0
+            5px;
+    }
+
+
+    .extra-stats {
+
+        gap: 5px;
+    }
+
+
+    .extra-stat {
+
+        flex-direction: column;
+
+        gap: 3px;
+
+        text-align: center;
+    }
+
+
+    .extra-stat > span {
+
+        font-size: 17px;
+    }
+
+
+    .extra-stat small {
+
+        font-size: 7px;
+    }
+
+
+    .extra-stat strong {
+
+        font-size: 11px;
+    }
+
+
+    .mission-panel {
+
+        padding: 10px;
+
+        gap: 9px;
+    }
+
+
+    .mission-icon {
+
+        width: 37px;
+        height: 37px;
+
+        font-size: 19px;
+    }
+
+
+    .mission-content strong {
+
+        font-size: 12px;
+    }
+
+
+    .mission-content p {
+
+        font-size: 9px;
+    }
+
+
+    .game-footer {
+
+        font-size: 8px;
+    }
+
+}
+
+
+/* ============================================================
+   VERY SMALL PHONES
+============================================================ */
+
+@media (max-width: 360px) {
+
+    .game-container {
+
+        padding-left: 7px;
+        padding-right: 7px;
+    }
+
+
+    .game-title h1 {
+
+        font-size: 17px;
+    }
+
+
+    .score-box {
+
+        padding:
+            5px
+            7px;
+    }
+
+
+    .game-area {
+
+        min-height: 330px;
+
+        height: 60vh;
+    }
+
+
+    .hud-item strong {
+
+        font-size: 10px;
+    }
+
+
+    .direction-button {
+
+        width: 48px;
+        height: 44px;
+    }
+
+
+    .game-actions button {
+
+        font-size: 10px;
+    }
+
+}
+
+
+/* ============================================================
+   LANDSCAPE MOBILE
+============================================================ */
+
+@media (
+    max-height: 500px
+)
+and (
+    orientation: landscape
+) {
+
+    .game-container {
+
+        max-width: 1000px;
+
+        padding:
+            10px
+            20px
+            25px;
+    }
+
+
+    .game-area {
+
+        height: 70vh;
+
+        min-height: 300px;
+    }
+
+
+    .game-hud {
+
+        margin-bottom: 7px;
+    }
+
+
+    .game-actions {
+
+        margin-top: 8px;
+    }
+
+
+    .mission-panel {
+
+        margin-top: 8px;
+    }
+
+}
+
+
+/* ============================================================
+   REDUCED MOTION
+============================================================ */
+
+@media (
+    prefers-reduced-motion: reduce
+) {
+
+    *,
+    *::before,
+    *::after {
+
+        animation-duration:
+            0.01ms !important;
+
+        animation-iteration-count:
+            1 !important;
+
+        transition-duration:
+            0.01ms !important;
+    }
+
+}

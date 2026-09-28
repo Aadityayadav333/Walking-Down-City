@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    >
+
+    <title>Walking Quest</title>
+
+    <link rel="stylesheet" href="style.css">
+
+</head>
+
+
+<body>
+
+    <!-- =====================================================
+         MAIN GAME CONTAINER
+    ====================================================== -->
+
+    <main class="game-container">
+
+
+        <!-- =================================================
+             TOP HEADER
+        ================================================== -->
+
+        <header class="game-header">
+
+            <div class="game-title">
+
+                <span class="title-icon">🚶</span>
+
+                <div>
+                    <h1>Walking Quest</h1>
+                    <p>Walk. Explore. Collect.</p>
+                </div>
+
+            </div>
+
+
+            <!-- Player Score -->
+
+            <div class="score-box">
+
+                <span class="score-icon">⭐</span>
+
+                <div>
+                    <small>Score</small>
+                    <strong id="score">0</strong>
+                </div>
+
+            </div>
+
+        </header>
+
+
+
+        <!-- =================================================
+             GAME STATUS
+        ================================================== -->
+
+        <div
+            id="status"
+            class="game-status"
+        >
+            Ready to start your journey.
+        </div>
+
+
+
+        <!-- =================================================
+             GAME HUD
+        ================================================== -->
+
+        <section class="game-hud">
+
+
+            <!-- Level -->
+
+            <div class="hud-item">
+
+                <span class="hud-icon">🎯</span>
+
+                <div>
+                    <small>Level</small>
+                    <strong id="level">1</strong>
+                </div>
+
+            </div>
+
+
+            <!-- Steps -->
+
+            <div class="hud-item">
+
+                <span class="hud-icon">👣</span>
+
+                <div>
+                    <small>Steps</small>
+                    <strong id="steps">0</strong>
+                </div>
+
+            </div>
+
+
+            <!-- Distance -->
+
+            <div class="hud-item">
+
+                <span class="hud-icon">📏</span>
+
+                <div>
+                    <small>Distance</small>
+                    <strong>
+                        <span id="distance">0</span> m
+                    </strong>
+                </div>
+
+            </div>
+
+
+            <!-- Coins -->
+
+            <div class="hud-item">
+
+                <span class="hud-icon">🪙</span>
+
+                <div>
+                    <small>Coins</small>
+                    <strong id="coins">0</strong>
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =================================================
+             GAME WORLD
+        ================================================== -->
+
+        <section
+            id="gameArea"
+            class="game-area"
+        >
+
+
+            <!-- =================================================
+                 WORLD BACKGROUND
+            ================================================== -->
+
+            <div class="world-background">
+
+
+                <!-- =============================================
+                     ROADS
+                ============================================== -->
+
+                <div class="road road-horizontal road-1"></div>
+
+                <div class="road road-horizontal road-2"></div>
+
+                <div class="road road-vertical road-3"></div>
+
+                <div class="road road-vertical road-4"></div>
+
+
+
+                <!-- =============================================
+                     ROAD INTERSECTIONS
+                ============================================== -->
+
+                <div class="intersection intersection-1"></div>
+
+                <div class="intersection intersection-2"></div>
+
+
+
+                <!-- =============================================
+                     PARK
+                ============================================== -->
+
+                <div
+                    class="location park"
+                    id="park"
+                >
+
+                    <span class="location-icon">🌳</span>
+
+                    <span class="location-name">
+                        Green Park
+                    </span>
+
+                    <div class="tree tree-1">🌳</div>
+                    <div class="tree tree-2">🌲</div>
+                    <div class="tree tree-3">🌳</div>
+                    <div class="tree tree-4">🌲</div>
+
+                </div>
+
+
+
+                <!-- =============================================
+                     HOUSE 1
+                ============================================== -->
+
+                <div
+                    class="location house house-1"
+                    id="house1"
+                >
+
+                    <span class="building-icon">🏠</span>
+
+                    <span class="location-name">
+                        Home
+                    </span>
+
+                </div>
+
+
+
+                <!-- =============================================
+                     HOUSE 2
+                ============================================== -->
+
+                <div
+                    class="location house house-2"
+                    id="house2"
+                >
+
+                    <span class="building-icon">🏡</span>
+
+                    <span class="location-name">
+                        Garden House
+                    </span>
+
+                </div>
+
+
+
+                <!-- =============================================
+                     SHOP
+                ============================================== -->
+
+                <div
+                    class="location shop"
+                    id="shop"
+                >
+
+                    <span class="building-icon">🏪</span>
+
+                    <span class="location-name">
+                        Market
+                    </span>
+
+                </div>
+
+
+
+                <!-- =============================================
+                     HOSPITAL
+                ============================================== -->
+
+                <div
+                    class="location hospital"
+                    id="hospital"
+                >
+
+                    <span class="building-icon">🏥</span>
+
+                    <span class="location-name">
+                        Hospital
+                    </span>
+
+                </div>
+
+
+
+                <!-- =============================================
+                     CAFE
+                ============================================== -->
+
+                <div
+                    class="location cafe"
+                    id="cafe"
+                >
+
+                    <span class="building-icon">☕</span>
+
+                    <span class="location-name">
+                        Cafe
+                    </span>
+
+                </div>
+
+
+
+                <!-- =============================================
+                     SCHOOL
+                ============================================== -->
+
+                <div
+                    class="location school"
+                    id="school"
+                >
+
+                    <span class="building-icon">🏫</span>
+
+                    <span class="location-name">
+                        School
+                    </span>
+
+                </div>
+
+
+
+                <!-- =============================================
+                     COINS
+                ============================================== -->
+
+                <button
+                    class="coin coin-1"
+                    id="coin1"
+                    aria-label="Coin"
+                >
+                    🪙
+                </button>
+
+
+                <button
+                    class="coin coin-2"
+                    id="coin2"
+                    aria-label="Coin"
+                >
+                    🪙
+                </button>
+
+
+                <button
+                    class="coin coin-3"
+                    id="coin3"
+                    aria-label="Coin"
+                >
+                    🪙
+                </button>
+
+
+                <button
+                    class="coin coin-4"
+                    id="coin4"
+                    aria-label="Coin"
+                >
+                    🪙
+                </button>
+
+
+                <button
+                    class="coin coin-5"
+                    id="coin5"
+                    aria-label="Coin"
+                >
+                    🪙
+                </button>
+
+
+
+                <!-- =============================================
+                     GOAL
+                ============================================== -->
+
+                <div
+                    id="goal"
+                    class="goal"
+                >
+
+                    <div class="goal-flag">
+                        🏁
+                    </div>
+
+                    <span>
+                        Finish
+                    </span>
+
+                </div>
+
+
+
+                <!-- =============================================
+                     PLAYER
+                ============================================== -->
+
+                <div
+                    id="player"
+                    class="player"
+                >
+
+                    <div class="player-character">
+                        🧍
+                    </div>
+
+                    <div class="player-shadow"></div>
+
+                </div>
+
+
+            </div>
+
+
+
+            <!-- =================================================
+                 MAP OVERLAY
+            ================================================== -->
+
+            <div class="map-overlay">
+
+
+                <!-- GPS indicator -->
+
+                <div class="gps-indicator">
+
+                    <span
+                        id="gpsDot"
+                        class="gps-dot"
+                    ></span>
+
+                    <span>
+                        GPS
+                    </span>
+
+                    <strong id="gpsAccuracy">
+                        --
+                    </strong>
+
+                </div>
+
+
+                <!-- Compass -->
+
+                <div class="compass">
+
+                    <span>↑</span>
+
+                    <small>N</small>
+
+                </div>
+
+            </div>
+
+
+        </section>
+
+
+
+        <!-- =================================================
+             CURRENT DIRECTION
+        ================================================== -->
+
+        <section class="direction-panel">
+
+            <span>Current Direction</span>
+
+            <strong id="direction">
+                None
+            </strong>
+
+        </section>
+
+
+
+        <!-- =================================================
+             MOVEMENT CONTROLS
+        ================================================== -->
+
+        <section class="controls-section">
+
+            <div class="controls-title">
+                Choose your direction
+            </div>
+
+
+            <div class="direction-controls">
+
+                <button
+                    class="direction-button up"
+                    onclick="setDirection('up')"
+                    aria-label="Move up"
+                >
+                    ↑
+                </button>
+
+
+                <div class="middle-controls">
+
+                    <button
+                        class="direction-button left"
+                        onclick="setDirection('left')"
+                        aria-label="Move left"
+                    >
+                        ←
+                    </button>
+
+
+                    <button
+                        class="direction-button down"
+                        onclick="setDirection('down')"
+                        aria-label="Move down"
+                    >
+                        ↓
+                    </button>
+
+
+                    <button
+                        class="direction-button right"
+                        onclick="setDirection('right')"
+                        aria-label="Move right"
+                    >
+                        →
+                    </button>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =================================================
+             GAME ACTIONS
+        ================================================== -->
+
+        <section class="game-actions">
+
+            <button
+                id="startButton"
+                class="primary-button"
+                onclick="startGame()"
+            >
+                🚶 Start Walking
+            </button>
+
+
+            <button
+                id="stopButton"
+                class="secondary-button"
+                onclick="stopGame()"
+            >
+                ⏸ Stop
+            </button>
+
+
+            <button
+                id="resetButton"
+                class="secondary-button"
+                onclick="resetGame()"
+            >
+                🔄 Reset
+            </button>
+
+        </section>
+
+
+
+        <!-- =================================================
+             EXTRA GAME INFORMATION
+        ================================================== -->
+
+        <section class="extra-stats">
+
+
+            <!-- Walking Distance -->
+
+            <div class="extra-stat">
+
+                <span>👣</span>
+
+                <div>
+                    <small>Walking Distance</small>
+
+                    <strong>
+                        <span id="walkingDistance">
+                            0
+                        </span>
+                        m
+                    </strong>
+                </div>
+
+            </div>
+
+
+            <!-- GPS Distance -->
+
+            <div class="extra-stat">
+
+                <span>📍</span>
+
+                <div>
+                    <small>GPS Distance</small>
+
+                    <strong>
+                        <span id="gpsDistance">
+                            0
+                        </span>
+                        m
+                    </strong>
+                </div>
+
+            </div>
+
+
+            <!-- Coins -->
+
+            <div class="extra-stat">
+
+                <span>🪙</span>
+
+                <div>
+                    <small>Coins Collected</small>
+
+                    <strong>
+                        <span id="coinsCollected">
+                            0
+                        </span>
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+        </section>
+
+
+
+        <!-- =================================================
+             LEVEL OBJECTIVE
+        ================================================== -->
+
+        <section class="mission-panel">
+
+            <div class="mission-icon">
+                🎯
+            </div>
+
+            <div class="mission-content">
+
+                <small>
+                    CURRENT MISSION
+                </small>
+
+                <strong id="mission">
+                    Reach the finish flag
+                </strong>
+
+                <p id="missionProgress">
+                    Walk 100 meters to complete the level.
+                </p>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =================================================
+             FOOTER
+        ================================================== -->
+
+        <footer class="game-footer">
+
+            <span>
+                Walking Quest
+            </span>
+
+            <span>
+                Explore • Collect • Complete
+            </span>
+
+        </footer>
+
+
+    </main>
+
+
+
+    <!-- =====================================================
+         JAVASCRIPT
+    ====================================================== -->
+
+    <script src="game.js"></script>
+
+</body>
+
+</html>
