@@ -1,145 +1,238 @@
-// ============================================================
-// WALKING GAME
-// GPS + ACCELEROMETER STEP DETECTION
-// ============================================================
+/* ============================================================
+   WALKING QUEST
+   GPS + STEP COUNTER + COINS + SCORE + MISSIONS
+============================================================ */
 
 
-// ============================================================
-// GAME STATE
-// ============================================================
-
-let currentDirection = null;
+/* ============================================================
+   GAME STATE
+============================================================ */
 
 let gameStarted = false;
 
 let watchId = null;
 
+let currentDirection = null;
 
-// ============================================================
-// WALKING / STEP STATE
-// ============================================================
+let currentLevel = 1;
 
-// Total detected steps
+let levelCompleted = false;
+
+
+/* ============================================================
+   PLAYER
+============================================================ */
+
+let playerX = 50;
+
+let playerY = 50;
+
+
+/* ============================================================
+   STEPS / DISTANCE
+============================================================ */
+
 let stepCount = 0;
 
-// Distance calculated from steps
 let walkingDistance = 0;
-
-// Approximate average stride length
-// Change this later according to your testing.
-const STEP_LENGTH = 0.70;
-
-
-// ============================================================
-// GPS STATE
-// ============================================================
-
-let previousPosition = null;
 
 let gpsDistance = 0;
 
 
-// ============================================================
-// PLAYER POSITION
-// ============================================================
-
-let playerX = 50;
-let playerY = 50;
+// Approximate distance represented by one step
+const STEP_LENGTH = 0.70;
 
 
-// ============================================================
-// MOVEMENT SETTINGS
-// ============================================================
-
-// Game pixels per real-world metre
+// Game movement per real-world metre
 const PIXELS_PER_METER = 3;
 
 
-// ============================================================
-// GPS SETTINGS
-// ============================================================
+/* ============================================================
+   SCORE
+============================================================ */
 
-// GPS is now mainly used for monitoring.
-// We don't use GPS distance for player movement,
-// because that would double-count movement detected
-// by the step counter.
+let score = 0;
+
+let coinsCollected = 0;
+
+
+/* ============================================================
+   COINS
+============================================================ */
+
+const coins = [
+    "coin1",
+    "coin2",
+    "coin3",
+    "coin4",
+    "coin5"
+];
+
+
+// Track which coins have already been collected
+const collectedCoins = new Set();
+
+
+/* ============================================================
+   MISSION
+============================================================ */
+
+let missionDistance = 100;
+
+let missionStartDistance = 0;
+
+
+/* ============================================================
+   GPS
+============================================================ */
+
+let previousPosition = null;
 
 const MAX_GPS_ACCURACY = 200;
 
 
-// ============================================================
-// STEP DETECTION SETTINGS
-// ============================================================
-
-// Minimum time between two detected steps.
-// Prevents one foot movement from being counted
-// multiple times.
-
-const MIN_STEP_INTERVAL = 300;
-
-
-// Acceleration threshold.
-//
-// This may need adjustment depending on your phone.
-//
-// Lower = easier to trigger
-// Higher = harder to trigger
-
-const STEP_THRESHOLD = 1.25;
-
-
-// How many acceleration samples we keep
-// for smoothing.
-
-const SMOOTHING_SAMPLES = 5;
-
-
-// ============================================================
-// ACCELEROMETER STATE
-// ============================================================
+/* ============================================================
+   STEP DETECTION
+============================================================ */
 
 let gravityX = 0;
+
 let gravityY = 0;
+
 let gravityZ = 0;
 
 const GRAVITY_ALPHA = 0.8;
 
-
-// Smoothed acceleration magnitude
 let accelerationHistory = [];
 
+const SMOOTHING_SAMPLES = 5;
 
-// Last detected step timestamp
+const STEP_THRESHOLD = 1.25;
+
+const MIN_STEP_INTERVAL = 300;
+
 let lastStepTime = 0;
 
-
-// Used to detect a peak
 let previousAcceleration = 0;
 
-
-// Prevent repeated step detection during
-// the same movement cycle.
-
 let stepArmed = true;
-
-
-// ============================================================
-// MOTION PERMISSION STATE
-// ============================================================
 
 let motionEnabled = false;
 
 
-// ============================================================
-// DIRECTION
-// ============================================================
+/* ============================================================
+   INITIALIZATION
+============================================================ */
 
-function setDirection(direction) {
+document.addEventListener(
+    "DOMContentLoaded",
+    initializeGame
+);
 
-    currentDirection = direction;
+
+function initializeGame() {
+
+    console.log(
+        "Walking Quest initialized."
+    );
+
+
+    updateAllUI();
+
+    updatePlayerPosition();
+
+    updateMission();
+
+    updateStatus(
+        "Ready to start your journey."
+    );
+
+
+    setupCoinButtons();
+
+
+    // Make sure coins are visible
+    coins.forEach(
+        coinId => {
+
+            const coin =
+                document.getElementById(
+                    coinId
+                );
+
+            if (coin) {
+
+                coin.style.display =
+                    "flex";
+            }
+        }
+    );
+}
+
+
+/* ============================================================
+   COIN BUTTON SETUP
+============================================================ */
+
+function setupCoinButtons() {
+
+    coins.forEach(
+        coinId => {
+
+            const coin =
+                document.getElementById(
+                    coinId
+                );
+
+            if (!coin) {
+                return;
+            }
+
+
+            // Clicking a coin manually can also
+            // collect it during desktop testing.
+            coin.addEventListener(
+                "click",
+                function () {
+
+                    collectCoin(
+                        coinId
+                    );
+
+                }
+            );
+        }
+    );
+}
+
+
+/* ============================================================
+   DIRECTION
+============================================================ */
+
+function setDirection(
+    direction
+) {
+
+    if (levelCompleted) {
+
+        updateStatus(
+            "Level completed! Press Reset to play again."
+        );
+
+        return;
+    }
+
+
+    currentDirection =
+        direction;
+
 
     const directionElement =
-        document.getElementById("direction");
+        document.getElementById(
+            "direction"
+        );
+
 
     if (directionElement) {
 
@@ -147,22 +240,23 @@ function setDirection(direction) {
             direction.toUpperCase();
     }
 
+
     console.log(
-        "Direction selected:",
+        "Direction:",
         direction
     );
 }
 
 
-// ============================================================
-// START GAME
-// ============================================================
+/* ============================================================
+   START GAME
+============================================================ */
 
 async function startGame() {
 
     if (gameStarted) {
 
-        console.log(
+        updateStatus(
             "Game is already running."
         );
 
@@ -170,14 +264,10 @@ async function startGame() {
     }
 
 
-    // --------------------------------------------------------
-    // Check GPS support
-    // --------------------------------------------------------
-
-    if (!navigator.geolocation) {
+    if (levelCompleted) {
 
         updateStatus(
-            "GPS is not supported by this browser."
+            "Level completed! Reset to play again."
         );
 
         return;
@@ -192,56 +282,54 @@ async function startGame() {
     );
 
 
-    console.log(
-        "Starting walking game..."
-    );
-
-
-    // --------------------------------------------------------
-    // Start motion sensor
-    // --------------------------------------------------------
-
+    // Start motion tracking
     await enableMotionTracking();
 
 
-    // --------------------------------------------------------
     // Start GPS
-    // --------------------------------------------------------
+    if (navigator.geolocation) {
 
-    console.log(
-        "Starting GPS..."
-    );
+        watchId =
+            navigator.geolocation.watchPosition(
 
+                handleLocation,
 
-    watchId =
-        navigator.geolocation.watchPosition(
+                handleLocationError,
 
-            handleLocation,
+                {
+                    enableHighAccuracy: true,
 
-            handleLocationError,
+                    maximumAge: 2000,
 
-            {
+                    timeout: 30000
+                }
 
-                enableHighAccuracy: true,
-
-                maximumAge: 2000,
-
-                timeout: 30000
-
-            }
-
-        );
+            );
+    }
 
 
     updateStatus(
-        "Game running. Select a direction and walk."
+        "Game running — choose a direction and walk!"
     );
+
+
+    const startButton =
+        document.getElementById(
+            "startButton"
+        );
+
+
+    if (startButton) {
+
+        startButton.textContent =
+            "🚶 Walking...";
+    }
 }
 
 
-// ============================================================
-// ENABLE MOTION TRACKING
-// ============================================================
+/* ============================================================
+   ENABLE MOTION TRACKING
+============================================================ */
 
 async function enableMotionTracking() {
 
@@ -251,18 +339,16 @@ async function enableMotionTracking() {
             "DeviceMotionEvent is not supported."
         );
 
+
         updateStatus(
-            "Motion sensor is not supported. GPS only."
+            "Motion sensor unavailable. GPS mode active."
         );
 
         return;
     }
 
 
-    // --------------------------------------------------------
-    // Some browsers require explicit permission.
-    // --------------------------------------------------------
-
+    // Some browsers require permission
     if (
         typeof DeviceMotionEvent.requestPermission ===
         "function"
@@ -273,11 +359,13 @@ async function enableMotionTracking() {
             const permission =
                 await DeviceMotionEvent.requestPermission();
 
+
             if (permission !== "granted") {
 
                 console.warn(
                     "Motion permission denied."
                 );
+
 
                 updateStatus(
                     "Motion permission denied. GPS still active."
@@ -286,7 +374,8 @@ async function enableMotionTracking() {
                 return;
             }
 
-        } catch (error) {
+        }
+        catch (error) {
 
             console.error(
                 "Motion permission error:",
@@ -297,10 +386,6 @@ async function enableMotionTracking() {
         }
     }
 
-
-    // --------------------------------------------------------
-    // Add accelerometer listener
-    // --------------------------------------------------------
 
     window.addEventListener(
         "devicemotion",
@@ -313,16 +398,18 @@ async function enableMotionTracking() {
 
 
     console.log(
-        "Accelerometer enabled."
+        "Motion tracking enabled."
     );
 }
 
 
-// ============================================================
-// HANDLE ACCELEROMETER DATA
-// ============================================================
+/* ============================================================
+   ACCELEROMETER
+============================================================ */
 
-function handleMotion(event) {
+function handleMotion(
+    event
+) {
 
     if (!gameStarted) {
         return;
@@ -338,20 +425,17 @@ function handleMotion(event) {
     }
 
 
-    let x =
+    const x =
         acceleration.x || 0;
 
-    let y =
+    const y =
         acceleration.y || 0;
 
-    let z =
+    const z =
         acceleration.z || 0;
 
 
-    // --------------------------------------------------------
     // Remove gravity
-    // --------------------------------------------------------
-
     gravityX =
         GRAVITY_ALPHA * gravityX +
         (1 - GRAVITY_ALPHA) * x;
@@ -375,10 +459,6 @@ function handleMotion(event) {
         z - gravityZ;
 
 
-    // --------------------------------------------------------
-    // Calculate acceleration magnitude
-    // --------------------------------------------------------
-
     const magnitude =
 
         Math.sqrt(
@@ -391,10 +471,6 @@ function handleMotion(event) {
 
         );
 
-
-    // --------------------------------------------------------
-    // Smooth the signal
-    // --------------------------------------------------------
 
     accelerationHistory.push(
         magnitude
@@ -423,27 +499,23 @@ function handleMotion(event) {
         accelerationHistory.length;
 
 
-    // --------------------------------------------------------
-    // STEP DETECTION
-    // --------------------------------------------------------
-
-    detectStep(average);
+    detectStep(
+        average
+    );
 }
 
 
-// ============================================================
-// DETECT STEP
-// ============================================================
+/* ============================================================
+   STEP DETECTION
+============================================================ */
 
-function detectStep(acceleration) {
+function detectStep(
+    acceleration
+) {
 
     const now =
         Date.now();
 
-
-    // --------------------------------------------------------
-    // Detect rising acceleration peak
-    // --------------------------------------------------------
 
     const rising =
         acceleration >
@@ -455,10 +527,6 @@ function detectStep(acceleration) {
         STEP_THRESHOLD;
 
 
-    // --------------------------------------------------------
-    // Detect step
-    // --------------------------------------------------------
-
     if (
 
         rising &&
@@ -467,31 +535,28 @@ function detectStep(acceleration) {
 
         stepArmed &&
 
-        (
-            now - lastStepTime
-        ) >
+        now - lastStepTime >
         MIN_STEP_INTERVAL
 
     ) {
 
         registerStep();
 
-        lastStepTime = now;
+        lastStepTime =
+            now;
 
-        stepArmed = false;
+        stepArmed =
+            false;
     }
 
-
-    // --------------------------------------------------------
-    // Re-arm after acceleration drops
-    // --------------------------------------------------------
 
     if (
         acceleration <
         STEP_THRESHOLD * 0.5
     ) {
 
-        stepArmed = true;
+        stepArmed =
+            true;
     }
 
 
@@ -500,9 +565,9 @@ function detectStep(acceleration) {
 }
 
 
-// ============================================================
-// REGISTER STEP
-// ============================================================
+/* ============================================================
+   REGISTER STEP
+============================================================ */
 
 function registerStep() {
 
@@ -511,53 +576,57 @@ function registerStep() {
     }
 
 
+    if (levelCompleted) {
+        return;
+    }
+
+
     stepCount++;
 
 
-    // --------------------------------------------------------
-    // Calculate walking distance
-    // --------------------------------------------------------
-
     walkingDistance =
-        stepCount * STEP_LENGTH;
+        stepCount *
+        STEP_LENGTH;
 
 
-    // --------------------------------------------------------
-    // Update UI
-    // --------------------------------------------------------
-
-    updateStepDisplay();
-
-    updateDistance();
+    updateAllUI();
 
 
     console.log(
-        "STEP:",
-        stepCount,
-        "| Walking distance:",
-        walkingDistance.toFixed(2),
-        "m"
+        `Step ${stepCount} | ${walkingDistance.toFixed(1)}m`
     );
 
 
-    // --------------------------------------------------------
-    // Move character
-    // --------------------------------------------------------
+    // Move player
+    moveCharacter(
+        STEP_LENGTH
+    );
 
-    moveCharacter(STEP_LENGTH);
+
+    // Check coins
+    checkCoinCollisions();
+
+
+    // Check goal
+    checkGoalCollision();
+
+
+    // Update mission
+    updateMission();
 }
 
 
-// ============================================================
-// MOVE CHARACTER
-// ============================================================
+/* ============================================================
+   MOVE PLAYER
+============================================================ */
 
-function moveCharacter(distance) {
+function moveCharacter(
+    distance
+) {
 
-    // Player cannot move without selecting
-    // a direction.
-
-    if (currentDirection === null) {
+    if (
+        !currentDirection
+    ) {
 
         console.log(
             "Step detected but no direction selected."
@@ -567,149 +636,717 @@ function moveCharacter(distance) {
     }
 
 
-    // --------------------------------------------------------
-    // Convert real-world metres
-    // into game movement.
-    // --------------------------------------------------------
-
     const movement =
-        distance * PIXELS_PER_METER;
+        distance *
+        PIXELS_PER_METER;
 
 
-    console.log(
-        "Game movement:",
-        movement.toFixed(2),
-        "pixels"
-    );
+    switch (
+        currentDirection
+    ) {
+
+        case "up":
+
+            playerY -= movement;
+
+            break;
 
 
-    // --------------------------------------------------------
-    // RIGHT
-    // --------------------------------------------------------
+        case "down":
 
-    if (currentDirection === "right") {
+            playerY += movement;
 
-        playerX += movement;
+            break;
+
+
+        case "left":
+
+            playerX -= movement;
+
+            break;
+
+
+        case "right":
+
+            playerX += movement;
+
+            break;
     }
 
 
-    // --------------------------------------------------------
-    // LEFT
-    // --------------------------------------------------------
-
-    else if (currentDirection === "left") {
-
-        playerX -= movement;
-    }
-
-
-    // --------------------------------------------------------
-    // UP
-    // --------------------------------------------------------
-
-    else if (currentDirection === "up") {
-
-        playerY -= movement;
-    }
-
-
-    // --------------------------------------------------------
-    // DOWN
-    // --------------------------------------------------------
-
-    else if (currentDirection === "down") {
-
-        playerY += movement;
-    }
-
-
-    // --------------------------------------------------------
-    // Keep player inside game area
-    // --------------------------------------------------------
-
+    // Keep player inside map
     playerX =
         Math.max(
-            0,
-            Math.min(100, playerX)
+            2,
+            Math.min(
+                98,
+                playerX
+            )
         );
 
 
     playerY =
         Math.max(
-            0,
-            Math.min(100, playerY)
+            2,
+            Math.min(
+                98,
+                playerY
+            )
         );
 
 
     updatePlayerPosition();
+
+
+    console.log(
+        "Player:",
+        playerX.toFixed(1),
+        playerY.toFixed(1)
+    );
 }
 
 
-// ============================================================
-// GPS LOCATION
-// ============================================================
+/* ============================================================
+   UPDATE PLAYER POSITION
+============================================================ */
 
-function handleLocation(position) {
+function updatePlayerPosition() {
+
+    const player =
+        document.getElementById(
+            "player"
+        );
+
+
+    if (!player) {
+        return;
+    }
+
+
+    player.style.left =
+        `${playerX}%`;
+
+
+    player.style.bottom =
+        `${playerY}%`;
+}
+
+
+/* ============================================================
+   COIN COLLISION DETECTION
+============================================================ */
+
+function checkCoinCollisions() {
+
+    const player =
+        document.getElementById(
+            "player"
+        );
+
+
+    if (!player) {
+        return;
+    }
+
+
+    const playerRect =
+        player.getBoundingClientRect();
+
+
+    coins.forEach(
+        coinId => {
+
+            if (
+                collectedCoins.has(
+                    coinId
+                )
+            ) {
+
+                return;
+            }
+
+
+            const coin =
+                document.getElementById(
+                    coinId
+                );
+
+
+            if (!coin) {
+                return;
+            }
+
+
+            const coinRect =
+                coin.getBoundingClientRect();
+
+
+            if (
+                rectanglesOverlap(
+                    playerRect,
+                    coinRect
+                )
+            ) {
+
+                collectCoin(
+                    coinId
+                );
+            }
+
+        }
+    );
+}
+
+
+/* ============================================================
+   RECTANGLE COLLISION
+============================================================ */
+
+function rectanglesOverlap(
+    rect1,
+    rect2
+) {
+
+    return (
+
+        rect1.left <
+        rect2.right &&
+
+        rect1.right >
+        rect2.left &&
+
+        rect1.top <
+        rect2.bottom &&
+
+        rect1.bottom >
+        rect2.top
+
+    );
+}
+
+
+/* ============================================================
+   COLLECT COIN
+============================================================ */
+
+function collectCoin(
+    coinId
+) {
+
+    if (
+        collectedCoins.has(
+            coinId
+        )
+    ) {
+
+        return;
+    }
+
+
+    const coin =
+        document.getElementById(
+            coinId
+        );
+
+
+    if (!coin) {
+        return;
+    }
+
+
+    collectedCoins.add(
+        coinId
+    );
+
+
+    coinsCollected++;
+
+
+    // Coin reward
+    score += 50;
+
+
+    // Hide coin
+    coin.style.display =
+        "none";
+
+
+    // Visual notification
+    showNotification(
+        "🪙 +50",
+        "coin"
+    );
+
+
+    updateAllUI();
+
+
+    updateMission();
+
+
+    console.log(
+        `Collected ${coinId}`
+    );
+
+
+    console.log(
+        `Coins: ${coinsCollected}`
+    );
+
+
+    console.log(
+        `Score: ${score}`
+    );
+}
+
+
+/* ============================================================
+   GOAL COLLISION
+============================================================ */
+
+function checkGoalCollision() {
+
+    if (levelCompleted) {
+        return;
+    }
+
+
+    const player =
+        document.getElementById(
+            "player"
+        );
+
+
+    const goal =
+        document.getElementById(
+            "goal"
+        );
+
+
+    if (
+        !player ||
+        !goal
+    ) {
+
+        return;
+    }
+
+
+    const playerRect =
+        player.getBoundingClientRect();
+
+
+    const goalRect =
+        goal.getBoundingClientRect();
+
+
+    if (
+        rectanglesOverlap(
+            playerRect,
+            goalRect
+        )
+    ) {
+
+        completeLevel();
+    }
+}
+
+
+/* ============================================================
+   COMPLETE LEVEL
+============================================================ */
+
+function completeLevel() {
+
+    if (levelCompleted) {
+        return;
+    }
+
+
+    levelCompleted =
+        true;
+
+
+    gameStarted =
+        false;
+
+
+    // Stop sensors
+    if (
+        watchId !== null
+    ) {
+
+        navigator.geolocation.clearWatch(
+            watchId
+        );
+
+        watchId = null;
+    }
+
+
+    window.removeEventListener(
+        "devicemotion",
+        handleMotion,
+        true
+    );
+
+
+    // Completion reward
+    const completionBonus =
+        100;
+
+
+    score +=
+        completionBonus;
+
+
+    updateAllUI();
+
+
+    // Update mission
+    const mission =
+        document.getElementById(
+            "mission"
+        );
+
+
+    const missionProgress =
+        document.getElementById(
+            "missionProgress"
+        );
+
+
+    if (mission) {
+
+        mission.textContent =
+            "🎉 Level Complete!";
+    }
+
+
+    if (missionProgress) {
+
+        missionProgress.textContent =
+            `You reached the finish and earned +${completionBonus} bonus points!`;
+    }
+
+
+    updateStatus(
+        "🎉 Level Complete! Great job!"
+    );
+
+
+    showNotification(
+        `🏁 LEVEL COMPLETE! +${completionBonus}`,
+        "level"
+    );
+
+
+    const startButton =
+        document.getElementById(
+            "startButton"
+        );
+
+
+    if (startButton) {
+
+        startButton.textContent =
+            "🏆 Level Complete";
+    }
+
+
+    // Add visual completion effect
+    const goal =
+        document.getElementById(
+            "goal"
+        );
+
+
+    if (goal) {
+
+        goal.style.transform =
+            "scale(1.3)";
+
+        goal.style.filter =
+            "drop-shadow(0 0 15px gold)";
+    }
+
+
+    console.log(
+        "LEVEL COMPLETE"
+    );
+
+
+    console.log(
+        "Final score:",
+        score
+    );
+}
+
+
+/* ============================================================
+   MISSION
+============================================================ */
+
+function updateMission() {
+
+    const mission =
+        document.getElementById(
+            "mission"
+        );
+
+
+    const missionProgress =
+        document.getElementById(
+            "missionProgress"
+        );
+
+
+    if (!missionProgress) {
+        return;
+    }
+
+
+    if (levelCompleted) {
+
+        if (mission) {
+
+            mission.textContent =
+                "🎉 Level Complete!";
+        }
+
+        missionProgress.textContent =
+            "You completed the mission.";
+
+        return;
+    }
+
+
+    const remaining =
+        Math.max(
+            0,
+            missionDistance -
+            walkingDistance
+        );
+
+
+    if (mission) {
+
+        mission.textContent =
+            "Reach the finish flag";
+    }
+
+
+    missionProgress.textContent =
+
+        `Walk ${Math.ceil(remaining)} meters more to complete the level.`;
+}
+
+
+/* ============================================================
+   UPDATE ALL UI
+============================================================ */
+
+function updateAllUI() {
+
+    updateScore();
+
+    updateSteps();
+
+    updateDistance();
+
+    updateWalkingDistance();
+
+    updateGPSDistance();
+
+    updateCoins();
+
+    updateLevel();
+
+    updateMission();
+}
+
+
+/* ============================================================
+   SCORE
+============================================================ */
+
+function updateScore() {
+
+    const element =
+        document.getElementById(
+            "score"
+        );
+
+
+    if (element) {
+
+        element.textContent =
+            score;
+    }
+}
+
+
+/* ============================================================
+   STEPS
+============================================================ */
+
+function updateSteps() {
+
+    const element =
+        document.getElementById(
+            "steps"
+        );
+
+
+    if (element) {
+
+        element.textContent =
+            stepCount;
+    }
+}
+
+
+/* ============================================================
+   DISTANCE
+============================================================ */
+
+function updateDistance() {
+
+    const element =
+        document.getElementById(
+            "distance"
+        );
+
+
+    if (element) {
+
+        element.textContent =
+            walkingDistance.toFixed(1);
+    }
+}
+
+
+/* ============================================================
+   WALKING DISTANCE
+============================================================ */
+
+function updateWalkingDistance() {
+
+    const element =
+        document.getElementById(
+            "walkingDistance"
+        );
+
+
+    if (element) {
+
+        element.textContent =
+            walkingDistance.toFixed(1);
+    }
+}
+
+
+/* ============================================================
+   GPS DISTANCE
+============================================================ */
+
+function updateGPSDistance() {
+
+    const element =
+        document.getElementById(
+            "gpsDistance"
+        );
+
+
+    if (element) {
+
+        element.textContent =
+            gpsDistance.toFixed(1);
+    }
+}
+
+
+/* ============================================================
+   COINS
+============================================================ */
+
+function updateCoins() {
+
+    const element =
+        document.getElementById(
+            "coins"
+        );
+
+
+    if (element) {
+
+        element.textContent =
+            coinsCollected;
+    }
+
+
+    const extraElement =
+        document.getElementById(
+            "coinsCollected"
+        );
+
+
+    if (extraElement) {
+
+        extraElement.textContent =
+            coinsCollected;
+    }
+}
+
+
+/* ============================================================
+   LEVEL
+============================================================ */
+
+function updateLevel() {
+
+    const element =
+        document.getElementById(
+            "level"
+        );
+
+
+    if (element) {
+
+        element.textContent =
+            currentLevel;
+    }
+}
+
+
+/* ============================================================
+   GPS
+============================================================ */
+
+function handleLocation(
+    position
+) {
 
     const latitude =
         position.coords.latitude;
 
+
     const longitude =
         position.coords.longitude;
+
 
     const accuracy =
         position.coords.accuracy;
 
 
-    console.log(
-        "--------------------------------"
-    );
-
-    console.log(
-        "Latitude:",
-        latitude
-    );
-
-    console.log(
-        "Longitude:",
-        longitude
-    );
-
-    console.log(
-        "GPS Accuracy:",
+    updateGPSAccuracy(
         accuracy
     );
 
 
-    // --------------------------------------------------------
-    // Update GPS status
-    // --------------------------------------------------------
-
-    updateGPSDisplay(accuracy);
-
-
-    // --------------------------------------------------------
-    // Very poor GPS
-    // --------------------------------------------------------
-
     if (
-        accuracy >
-        MAX_GPS_ACCURACY
+        previousPosition === null
     ) {
-
-        console.warn(
-            "Poor GPS accuracy:",
-            accuracy.toFixed(1),
-            "m"
-        );
-    }
-
-
-    // --------------------------------------------------------
-    // First GPS reading
-    // --------------------------------------------------------
-
-    if (previousPosition === null) {
 
         previousPosition = {
 
@@ -722,18 +1359,9 @@ function handleLocation(position) {
         };
 
 
-        console.log(
-            "Initial GPS position stored."
-        );
-
-
         return;
     }
 
-
-    // --------------------------------------------------------
-    // Calculate GPS distance
-    // --------------------------------------------------------
 
     const distance =
         calculateDistance(
@@ -749,13 +1377,6 @@ function handleLocation(position) {
         );
 
 
-    console.log(
-        "Raw GPS movement:",
-        distance.toFixed(2),
-        "m"
-    );
-
-
     previousPosition = {
 
         latitude:
@@ -767,39 +1388,31 @@ function handleLocation(position) {
     };
 
 
-    // --------------------------------------------------------
-    // Only store reasonable GPS movement.
-    //
-    // IMPORTANT:
-    // This does NOT move the player.
-    // Steps are responsible for movement.
-    // --------------------------------------------------------
-
+    // Only accept reasonable GPS movement
     if (
         distance >= 3 &&
         distance <= 20
     ) {
 
-        gpsDistance += distance;
+        gpsDistance +=
+            distance;
+
+
+        updateGPSDistance();
+
 
         console.log(
-            "GPS movement accepted:",
-            distance.toFixed(2),
+            "GPS distance:",
+            gpsDistance.toFixed(1),
             "m"
-        );
-
-    } else {
-
-        console.log(
-            "GPS movement ignored for movement."
         );
     }
 }
 
 
-// ============================================================
-// HAVERSINE DISTANCE
-// ============================================================
+/* ============================================================
+   HAVERSINE DISTANCE
+============================================================ */
 
 function calculateDistance(
     lat1,
@@ -808,13 +1421,15 @@ function calculateDistance(
     lon2
 ) {
 
-    const R = 6371000;
+    const R =
+        6371000;
 
 
     const lat1Rad =
         lat1 *
         Math.PI /
         180;
+
 
     const lat2Rad =
         lat2 *
@@ -829,6 +1444,7 @@ function calculateDistance(
         Math.PI /
         180;
 
+
     const deltaLon =
         (
             lon2 - lon1
@@ -841,22 +1457,25 @@ function calculateDistance(
 
         Math.sin(
             deltaLat / 2
-        ) *
-        Math.sin(
-            deltaLat / 2
-        )
+        ) ** 2
 
         +
 
-        Math.cos(lat1Rad) *
-        Math.cos(lat2Rad) *
+        Math.cos(
+            lat1Rad
+        )
+
+        *
+
+        Math.cos(
+            lat2Rad
+        )
+
+        *
 
         Math.sin(
             deltaLon / 2
-        ) *
-        Math.sin(
-            deltaLon / 2
-        );
+        ) ** 2;
 
 
     const c =
@@ -867,7 +1486,9 @@ function calculateDistance(
 
             Math.sqrt(a),
 
-            Math.sqrt(1 - a)
+            Math.sqrt(
+                1 - a
+            )
 
         );
 
@@ -876,194 +1497,225 @@ function calculateDistance(
 }
 
 
-// ============================================================
-// UPDATE PLAYER POSITION
-// ============================================================
+/* ============================================================
+   GPS ACCURACY UI
+============================================================ */
 
-function updatePlayerPosition() {
-
-    const player =
-        document.getElementById(
-            "player"
-        );
-
-
-    if (!player) {
-
-        console.error(
-            "Player element not found."
-        );
-
-        return;
-    }
-
-
-    player.style.left =
-        `${playerX}%`;
-
-    player.style.bottom =
-        `${playerY}%`;
-}
-
-
-// ============================================================
-// UPDATE DISTANCE DISPLAY
-// ============================================================
-
-function updateDistance() {
-
-    const distanceElement =
-        document.getElementById(
-            "distance"
-        );
-
-
-    if (!distanceElement) {
-        return;
-    }
-
-
-    distanceElement.textContent =
-        walkingDistance.toFixed(1);
-}
-
-
-// ============================================================
-// UPDATE STEP DISPLAY
-// ============================================================
-
-function updateStepDisplay() {
-
-    const stepElement =
-        document.getElementById(
-            "steps"
-        );
-
-
-    if (!stepElement) {
-        return;
-    }
-
-
-    stepElement.textContent =
-        stepCount;
-}
-
-
-// ============================================================
-// UPDATE GPS DISPLAY
-// ============================================================
-
-function updateGPSDisplay(
+function updateGPSAccuracy(
     accuracy
 ) {
 
-    const gpsElement =
+    const element =
         document.getElementById(
             "gpsAccuracy"
         );
 
 
-    if (!gpsElement) {
+    if (element) {
+
+        element.textContent =
+            `${accuracy.toFixed(1)} m`;
+    }
+
+
+    const dot =
+        document.getElementById(
+            "gpsDot"
+        );
+
+
+    if (!dot) {
         return;
     }
 
 
-    gpsElement.textContent =
-        `${accuracy.toFixed(1)} m`;
+    if (accuracy <= 20) {
+
+        dot.style.background =
+            "#22c55e";
+
+    }
+
+    else if (accuracy <= 50) {
+
+        dot.style.background =
+            "#f59e0b";
+
+    }
+
+    else {
+
+        dot.style.background =
+            "#ef4444";
+    }
 }
 
 
-// ============================================================
-// UPDATE STATUS
-// ============================================================
+/* ============================================================
+   STATUS
+============================================================ */
 
 function updateStatus(
     message
 ) {
 
-    const statusElement =
+    const status =
         document.getElementById(
             "status"
         );
 
 
-    if (statusElement) {
+    if (status) {
 
-        statusElement.textContent =
+        status.textContent =
             message;
     }
 }
 
 
-// ============================================================
-// GPS ERROR HANDLER
-// ============================================================
+/* ============================================================
+   NOTIFICATION
+============================================================ */
 
-function handleLocationError(
-    error
+function showNotification(
+    message,
+    type = "normal"
 ) {
 
-    console.error(
-        "Geolocation error:",
-        error
-    );
+    // Remove old notification
+    const old =
+        document.getElementById(
+            "gameNotification"
+        );
 
 
-    let message =
-        "Unable to get your location.";
+    if (old) {
 
-
-    switch (error.code) {
-
-        case error.PERMISSION_DENIED:
-
-            message =
-                "Location permission was denied.";
-
-            break;
-
-
-        case error.POSITION_UNAVAILABLE:
-
-            message =
-                "GPS position is unavailable.";
-
-            break;
-
-
-        case error.TIMEOUT:
-
-            message =
-                "GPS request timed out. Waiting for another fix...";
-
-            break;
-
-
-        default:
-
-            message =
-                "Unknown GPS error.";
-
-            break;
+        old.remove();
     }
 
 
-    updateStatus(
-        message
+    const notification =
+        document.createElement(
+            "div"
+        );
+
+
+    notification.id =
+        "gameNotification";
+
+
+    notification.textContent =
+        message;
+
+
+    notification.style.position =
+        "fixed";
+
+
+    notification.style.left =
+        "50%";
+
+
+    notification.style.top =
+        "50%";
+
+
+    notification.style.transform =
+        "translate(-50%, -50%) scale(0.7)";
+
+
+    notification.style.zIndex =
+        "9999";
+
+
+    notification.style.padding =
+        "14px 22px";
+
+
+    notification.style.borderRadius =
+        "16px";
+
+
+    notification.style.fontSize =
+        "18px";
+
+
+    notification.style.fontWeight =
+        "800";
+
+
+    notification.style.color =
+        "#ffffff";
+
+
+    notification.style.background =
+        type === "level"
+            ? "#1769aa"
+            : "#d99b00";
+
+
+    notification.style.boxShadow =
+        "0 12px 35px rgba(0,0,0,0.25)";
+
+
+    notification.style.opacity =
+        "0";
+
+
+    notification.style.transition =
+        "all 0.25s ease";
+
+
+    document.body.appendChild(
+        notification
+    );
+
+
+    requestAnimationFrame(
+        () => {
+
+            notification.style.opacity =
+                "1";
+
+            notification.style.transform =
+                "translate(-50%, -50%) scale(1)";
+        }
+    );
+
+
+    setTimeout(
+        () => {
+
+            notification.style.opacity =
+                "0";
+
+            notification.style.transform =
+                "translate(-50%, -50%) scale(0.8)";
+
+
+            setTimeout(
+                () => {
+
+                    notification.remove();
+
+                },
+                250
+            );
+
+        },
+        type === "level"
+            ? 2500
+            : 900
     );
 }
 
 
-// ============================================================
-// STOP GAME
-// ============================================================
+/* ============================================================
+   STOP GAME
+============================================================ */
 
 function stopGame() {
-
-    // --------------------------------------------------------
-    // Stop GPS
-    // --------------------------------------------------------
 
     if (
         watchId !== null
@@ -1077,10 +1729,6 @@ function stopGame() {
     }
 
 
-    // --------------------------------------------------------
-    // Stop accelerometer
-    // --------------------------------------------------------
-
     window.removeEventListener(
         "devicemotion",
         handleMotion,
@@ -1088,141 +1736,235 @@ function stopGame() {
     );
 
 
-    motionEnabled = false;
+    motionEnabled =
+        false;
 
-    gameStarted = false;
+
+    gameStarted =
+        false;
 
 
     updateStatus(
-        "Game stopped."
+        "Game paused."
     );
 
 
+    const startButton =
+        document.getElementById(
+            "startButton"
+        );
+
+
+    if (startButton) {
+
+        startButton.textContent =
+            "🚶 Resume Walking";
+    }
+
+
     console.log(
-        "Walking game stopped."
+        "Game stopped."
     );
 }
 
 
-// ============================================================
-// RESET GAME
-// ============================================================
+/* ============================================================
+   RESET GAME
+============================================================ */
 
 function resetGame() {
-
-    // --------------------------------------------------------
-    // Stop sensors
-    // --------------------------------------------------------
 
     stopGame();
 
 
-    // --------------------------------------------------------
-    // Reset step counter
-    // --------------------------------------------------------
-
-    stepCount = 0;
-
-
-    // --------------------------------------------------------
-    // Reset walking distance
-    // --------------------------------------------------------
-
-    walkingDistance = 0;
-
-
-    // --------------------------------------------------------
-    // Reset GPS distance
-    // --------------------------------------------------------
-
-    gpsDistance = 0;
-
-
-    // --------------------------------------------------------
-    // Reset GPS reference
-    // --------------------------------------------------------
-
-    previousPosition = null;
-
-
-    // --------------------------------------------------------
     // Reset player
-    // --------------------------------------------------------
+    playerX =
+        50;
 
-    playerX = 50;
-
-    playerY = 50;
-
-
-    // --------------------------------------------------------
-    // Reset direction
-    // --------------------------------------------------------
-
-    currentDirection = null;
+    playerY =
+        50;
 
 
-    // --------------------------------------------------------
+    // Reset counters
+    stepCount =
+        0;
+
+    walkingDistance =
+        0;
+
+    gpsDistance =
+        0;
+
+    score =
+        0;
+
+    coinsCollected =
+        0;
+
+
+    currentDirection =
+        null;
+
+
+    currentLevel =
+        1;
+
+
+    levelCompleted =
+        false;
+
+
+    previousPosition =
+        null;
+
+
+    collectedCoins.clear();
+
+
     // Reset accelerometer
-    // --------------------------------------------------------
+    gravityX =
+        0;
 
-    gravityX = 0;
+    gravityY =
+        0;
 
-    gravityY = 0;
+    gravityZ =
+        0;
 
-    gravityZ = 0;
+    accelerationHistory =
+        [];
 
-    accelerationHistory = [];
+    previousAcceleration =
+        0;
 
-    previousAcceleration = 0;
+    lastStepTime =
+        0;
 
-    lastStepTime = 0;
-
-    stepArmed = true;
-
-
-    // --------------------------------------------------------
-    // Update UI
-    // --------------------------------------------------------
-
-    updateStepDisplay();
-
-    updateDistance();
-
-    updatePlayerPosition();
+    stepArmed =
+        true;
 
 
-    const directionElement =
+    // Show all coins again
+    coins.forEach(
+        coinId => {
+
+            const coin =
+                document.getElementById(
+                    coinId
+                );
+
+
+            if (coin) {
+
+                coin.style.display =
+                    "flex";
+
+                coin.style.opacity =
+                    "1";
+            }
+        }
+    );
+
+
+    // Reset goal appearance
+    const goal =
+        document.getElementById(
+            "goal"
+        );
+
+
+    if (goal) {
+
+        goal.style.transform =
+            "";
+
+        goal.style.filter =
+            "";
+    }
+
+
+    // Reset direction
+    const direction =
         document.getElementById(
             "direction"
         );
 
 
-    if (directionElement) {
+    if (direction) {
 
-        directionElement.textContent =
+        direction.textContent =
             "None";
     }
 
 
-    const gpsElement =
+    // Reset button
+    const startButton =
         document.getElementById(
-            "gpsAccuracy"
+            "startButton"
         );
 
 
-    if (gpsElement) {
+    if (startButton) {
 
-        gpsElement.textContent =
-            "--";
+        startButton.textContent =
+            "🚶 Start Walking";
     }
 
 
+    updatePlayerPosition();
+
+    updateAllUI();
+
+    updateGPSAccuracy(
+        999
+    );
+
+
     updateStatus(
-        "Game reset. Ready to start."
+        "Game reset. Ready for a new journey."
     );
 
 
     console.log(
-        "Game reset."
+        "Game completely reset."
     );
 }
+
+
+/* ============================================================
+   KEYBOARD CONTROLS
+   Useful for desktop testing
+============================================================ */
+
+document.addEventListener(
+    "keydown",
+    function (event) {
+
+        if (event.key === "ArrowUp") {
+
+            setDirection("up");
+        }
+
+        else if (
+            event.key === "ArrowDown"
+        ) {
+
+            setDirection("down");
+        }
+
+        else if (
+            event.key === "ArrowLeft"
+        ) {
+
+            setDirection("left");
+        }
+
+        else if (
+            event.key === "ArrowRight"
+        ) {
+
+            setDirection("right");
+        }
+
+    }
+);
